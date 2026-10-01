@@ -17,7 +17,11 @@
 *Le schéma d'architecture **attendu**, produit en séance 1 à partir du seul
 dossier client, inséré **tel quel** : ne le corrigez pas.*
 
+<<<<<<< HEAD
 *[insérer le schéma attendu de la séance 1]*
+=======
+![alt text](image.png)
+>>>>>>> d3dccda (ajout schéma infra Séance 1)
 
 *Le schéma de l'architecture **réelle**, telle que vous l'avez découverte en
 séance 2.*

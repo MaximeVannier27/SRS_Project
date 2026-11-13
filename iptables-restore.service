@@ -1,0 +1,14 @@
+# A installer dans /etc/systemd/system/ si iptables-persistent n'est pas disponible
+# Remplacer NOM par jump, scada-a, scada-b, historian, pupitre ou wazuh
+[Unit]
+Description=Restauration des regles iptables
+Before=network-pre.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/iptables-restore /etc/iptables/NOM.rules
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

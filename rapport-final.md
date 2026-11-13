@@ -18,8 +18,7 @@
 dossier client, inséré **tel quel** : ne le corrigez pas.*
 
 
-![alt text](image.png)
->>>>>>> d3dccda (ajout schéma infra Séance 1)
+![Schéma d'architecture attendu (séance 1)](Schéma_Infra_Seance1.png)
 
 *Le schéma de l'architecture **réelle**, telle que vous l'avez découverte en
 séance 2.*

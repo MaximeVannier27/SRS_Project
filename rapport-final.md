@@ -72,12 +72,14 @@ fois. Appuyez-vous sur vos artefacts (logs, captures).*
 
 **Incident — [séance, date] — …** *(un bloc par incident)*
 
-## 5. Prise de recul métier *(≤ 1 page, ouverture)*
+## 5. Prise de recul métier *(≤ 2 pages, ouverture)*
 
-*La partie « ouverture », à travailler surtout en vue de la soutenance. Avec le
-recul : quelles contraintes du client vous ont gênés ? Qu'est-ce que votre
-dispositif ne verrait pas ? Que recommanderiez-vous au client ? Ce n'est pas un
-exposé de normes : c'est votre lecture de ce qui compte pour ce client précis (vous pouvez suggérer une nouvelle architecture).*
+*La partie la plus valorisée du rapport. Avec le recul : quelles contraintes
+du client vous ont gênés ? Quels sont les défauts de son infrastructure ?
+Qu'est-ce que votre dispositif ne verrait pas ? Puis vos **suggestions
+concrètes d'amélioration** : quoi changer, où, et ce que cela apporterait au
+client (vous pouvez suggérer une nouvelle architecture). Ce n'est pas un exposé
+de normes : c'est votre lecture de ce qui compte pour ce client précis.*
 
 ## 6. Journal de bord *(≤ 1 page)* · toutes les séances
 

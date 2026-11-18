@@ -41,10 +41,6 @@
 -A OUTPUT -p udp -d 9.9.9.9,1.1.1.1 --dport 53 -m comment --comment "TEMP flux7bis DNS" -j ACCEPT
 -A OUTPUT -p tcp -d 9.9.9.9,1.1.1.1 --dport 53 -m comment --comment "TEMP flux7bis DNS" -j ACCEPT
 
-# --- DHCP : decommenter SEULEMENT si eth0 est en DHCP (ip -4 a show eth0 : "dynamic") ---
-# -A INPUT -p udp --sport 67 --dport 68 -j ACCEPT
-# -A OUTPUT -p udp --sport 68 --dport 67 -j ACCEPT
-
 # --- Journalisation des refus (avant la politique DROP) ---
 -A INPUT -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "IN-DROP: "
 -A OUTPUT -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "OUT-DROP: "

@@ -10,7 +10,7 @@ Réseau `192.168.102.0/24` · jump `.10` · scada-a `.20` · historian `.21` · 
 | 2 | jump | scada-a, scada-b, historian, pupitre, wazuh | TCP/22 | Administration SSH | `ss -tnp` |
 | 3 | jump, scada-a, scada-b, historian, pupitre | wazuh | TCP/1514 | Remontée des journaux (agents) | `ss -tnp` sur wazuh |
 | 4 | jump, scada-a, scada-b, historian, pupitre | wazuh | TCP/1515 | Enrôlement des agents. Ouvert en permanence, limité aux 5 IP des agents | `ss -tulpn` wazuh |
-| 5 | Poste admin (via passerelle `.1`) | wazuh | TCP/443 | Dashboard Wazuh (exposé en 4402) | `ss -tulpn` wazuh |
+| 5 | Internet (toutes les sources) | wazuh | TCP/443 | Dashboard Wazuh (exposé en 4402), protégé par authentification | `ss -tulpn` wazuh, journaux `IN-DROP` (`DPT=443`) |
 | 6 | jump, scada-a, scada-b, pupitre, wazuh | historian | UDP/123 | Synchronisation horaire (historian = référence) | `chronyc clients`, `tcpdump` |
 | 7 | historian | Internet (toutes adresses, **temporaire**) | UDP/123 | Obtention de l'heure de référence (aucune source interne). Provisoire : restriction aux IP des serveurs NTP à faire ultérieurement | `chronyc sources -n`, `tcpdump -i any -nn udp port 123` |
 | 7 bis | historian | 9.9.9.9 (Quad9), 1.1.1.1 (Cloudflare) | UDP/53 (repli TCP/53) | **Temporaire** : résolution des noms des serveurs NTP. À supprimer quand les sources seront déclarées par IP | `resolvectl status`, `tcpdump -i any -nn port 53` |
@@ -42,7 +42,7 @@ Tout le reste est refusé et journalisé. Sur chaque machine : loopback et conne
 | scada-b | TCP/22 depuis jump ; TCP/443 depuis historian, pupitre | TCP/1514 et 1515 vers wazuh ; UDP/123 vers historian ; TCP/4840 vers `.201` |
 | historian | TCP/22 depuis jump ; TCP/443 depuis pupitre ; UDP/123 depuis jump, scada-a, scada-b, pupitre, wazuh | TCP/443 vers scada-a, scada-b ; TCP/1514 et 1515 vers wazuh ; UDP/123 vers Internet (temporaire) ; UDP/53 et TCP/53 vers 9.9.9.9 et 1.1.1.1 (temporaire) |
 | pupitre | TCP/22 depuis jump | TCP/443 vers historian, scada-a, scada-b ; UDP/123 vers historian ; TCP/1514 et 1515 vers wazuh |
-| wazuh | TCP/22 depuis jump ; TCP/1514 et 1515 depuis les 5 agents ; TCP/443 depuis le poste admin ; TCP/55000 depuis localhost seulement | UDP/123 vers historian |
+| wazuh | TCP/22 depuis jump ; TCP/1514 et 1515 depuis les 5 agents ; TCP/443 depuis toutes les sources (dashboard protégé par authentification) ; TCP/55000 depuis localhost seulement | UDP/123 vers historian |
 
 ## 3. Points à vérifier avant d'écrire les iptables
 
@@ -53,7 +53,7 @@ Tout le reste est refusé et journalisé. Sur chaque machine : loopback et conne
 - [ ] **Directive NTP d'historian** : `sudo grep -rEi "^(server|pool)" /etc/chrony/ /etc/chrony.conf`. Avec `pool`, les adresses changent à chaque résolution.
 - [ ] **Adresses des serveurs NTP** (étape suivante) : `chronyc sources -n`, puis choix de 4 serveurs stables et passage en `server IP iburst`.
 - [ ] **Mot de passe d'enrôlement** : `sudo grep -A15 "<auth>" /var/ossec/etc/ossec.conf` sur wazuh (`use_password`).
-- [ ] **IP source du dashboard** : `sudo ss -tn state established '( sport = :443 )'` sur wazuh, dashboard ouvert (sinon risque de s'enfermer dehors).
+- [x] **IP source du dashboard** : la source réelle est l'IP publique de l'utilisateur et non la passerelle `.1` (journaux `IN-DROP`, `SRC=` avec `DPT=443`). Flux 5 ouvert à toutes les sources.
 - [ ] **DHCP et IPv6 sur chaque machine** : `ip -4 a show eth0` (mention `dynamic` : prévoir UDP 67/68), `ip -6 a` (si IPv6 actif : ip6tables équivalent ou désactivation).
 
 ## 4. Écarts avec le schéma de séance 1
@@ -67,3 +67,4 @@ Tout le reste est refusé et journalisé. Sur chaque machine : loopback et conne
 | Automates `.200` et `.201` injoignables dans le lab | Réseau de terrain hors périmètre | Autoriser le flux, surveiller |
 | Compte HTTPS partagé (`svc-hydrelec`, `svc-aquatron`) entre historian et pupitre | Choix du client, attribution impossible par compte | Surveiller (source IP) |
 | `verify=False` dans `collecte.py` | Certificats auto-signés des passerelles | Recommander une CA interne |
+| Accès au dashboard Wazuh : restriction initiale à l'IP de l'école (`134.214.58.64`, vue dans les connexions SSH du 13/11) puis ouverture à toutes les sources | L'IP publique varie selon le réseau (eduroam, domicile) : la restriction bloquait les membres du groupe (`IN-DROP` sur le port 443). Le dashboard reste protégé par authentification | Autoriser TCP/443 depuis toutes les sources ; recommander un accès via le jump (tunnel SSH) ou un VPN, conformément à l'exigence du client de ne pas exposer la supervision |

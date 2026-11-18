@@ -1,0 +1,55 @@
+Incident 2 (17/11/2026) : extraits du journal nginx de la passerelle Hydrelec
+Machine : scada-a (192.168.102.20)
+Fichier : /var/log/nginx/passerelle_access.log
+Collecte des extraits : après l'incident, avant la rotation du journal.
+Les deux sorties ci-dessous sont recopiées telles quelles depuis les sorties de commande obtenues sur scada-a.
+
+======================================================================
+1) Requêtes de 192.168.102.21 (historian) autres que "GET /registers"
+   Commande : sudo grep '^192.168.102.21 ' /var/log/nginx/passerelle_access.log | grep -v 'GET /registers'
+======================================================================
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /config HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /api HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /status HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /setup HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /debug HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /login HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /users HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /export HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /backup HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /update HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /consignes HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /set HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /write HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /v1 HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /v2 HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /docs HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /openapi.json HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /swagger HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /metrics HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /automates HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /reglages HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /settings HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /param HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /commande HTTP/1.1" 404 207 "python-requests/2.32.3"
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:53 +0100] "POST /setpoints HTTP/1.1" 200 87 "python-requests/2.32.3"
+
+======================================================================
+2) Qui appelle quoi sur la passerelle (comptage par source, méthode et URL)
+   Commande : sudo awk '{print $1, $6, $7}' /var/log/nginx/passerelle_access.log | sort | uniq -c | sort -nr | head
+   Note : la sortie est limitée à 10 lignes par "head" ; elle inclut les requêtes de l'incident.
+======================================================================
+    273 192.168.102.21 "GET /registers
+    137 192.168.102.22 "GET /registers
+      7 192.168.102.22 "POST /setpoints
+      1 192.168.102.21 "POST /setpoints
+      1 192.168.102.21 "GET /write
+      1 192.168.102.21 "GET /v2
+      1 192.168.102.21 "GET /v1
+      1 192.168.102.21 "GET /users
+      1 192.168.102.21 "GET /update
+      1 192.168.102.21 "GET /swagger
+
+Lecture : en temps normal, 192.168.102.21 (historian) ne fait que "GET /registers" et 192.168.102.22 (pupitre) fait
+"GET /registers" et "POST /setpoints". Les autres lignes de 192.168.102.21 (25 GET en 404 et 1 POST) sont l'incident.

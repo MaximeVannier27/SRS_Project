@@ -25,9 +25,10 @@
 -A INPUT -p tcp -s 192.168.102.10,192.168.102.20,192.168.102.21,192.168.102.22,192.168.102.24 --dport 1514 -j ACCEPT
 -A INPUT -p tcp -s 192.168.102.10,192.168.102.20,192.168.102.21,192.168.102.22,192.168.102.24 --dport 1515 -j ACCEPT
 
-# Flux 5 : dashboard. A CONFIRMER : IP source reelle vue par wazuh (NAT de la passerelle = .1 ?)
-# Verifier avec : sudo ss -tn state established '( sport = :443 )'  (dashboard ouvert)
--A INPUT -p tcp -s 192.168.102.1 --dport 443 -j ACCEPT
+# Flux 5 : dashboard (expose en 4402). Ouvert a toutes les sources, acces protege par authentification.
+# La source reelle n'est pas la passerelle .1 : les journaux IN-DROP montrent l'IP publique de l'utilisateur,
+# qui varie selon le reseau (eduroam, domicile). Une restriction a une IP fixe bloquait le groupe.
+-A INPUT -p tcp --dport 443 -j ACCEPT
 
 # API (55000) : localhost seulement, couvert par la regle loopback, aucune regle necessaire
 

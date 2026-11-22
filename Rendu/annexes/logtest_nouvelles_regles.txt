@@ -1,0 +1,544 @@
+Règles ajoutées après l'incident 2 : tests avec wazuh-logtest (Wazuh 4.14.9, serveur wazuh), 18/11/2026
+Règles testées : 100021, 100022, 100020, 100012, 100023 (et 100001, qui compose 100023).
+Sortie recopiée telle quelle depuis la session wazuh-logtest, sans modification.
+
+Lecture des tests, dans l'ordre :
+ 1. "password changed for root"                      -> 100021 (niveau 12)
+ 2. échec de connexion sur la console (ttyS0)        -> 100022 (niveau 10)
+ 3. session root ouverte par "login" (console)       -> 100020 (niveau 12)
+ 4. session SSH de presta                            -> 5501 seulement (pas 100020)
+ 5. session sudo vers root                           -> 5501 seulement (pas 100020)
+ 6. consigne chlore 0.1 émise par le pupitre         -> 100012 (niveau 12)
+ 7. consigne chlore 0.55 émise par le pupitre        -> aucune alerte (valeur normale)
+ 8. seuil_bas_pct 20.0 émis par le pupitre           -> aucune alerte (valeur normale)
+ 9. seuil_bas_pct 30.0 émis par le pupitre           -> 100012 (niveau 12)
+10. requêtes 404 répétées depuis 192.168.102.21      -> 100001 à chaque requête, puis 100023 à la 8e et à la 16e
+
+======================================================================
+presta@wazuh:~$ sudo /var/ossec/bin/wazuh-logtest
+Starting wazuh-logtest v4.14.9
+Type one log per line
+
+Nov 17 22:13:55 historian chpasswd[68885]: pam_unix(chpasswd:chauthtok): password changed for root
+
+**Phase 1: Completed pre-decoding.
+        full event: 'Nov 17 22:13:55 historian chpasswd[68885]: pam_unix(chpasswd:chauthtok): password changed for root'
+        timestamp: 'Nov 17 22:13:55'
+        hostname: 'historian'
+        program_name: 'chpasswd'
+
+**Phase 2: Completed decoding.
+        name: 'pam'
+        parent: 'pam'
+        dstuser: 'root'
+
+**Phase 3: Completed filtering (rules).
+        id: '100021'
+        level: '12'
+        description: 'Mot de passe root change'
+        groups: '['local', 'custom', 'console', 'config_change']'
+        firedtimes: '1'
+        mail: 'True'
+**Alert to be generated.
+
+Nov 17 22:14:34 historian login[47932]: pam_unix(login:auth): authentication failure; logname= uid=0 euid=0 tty=/dev/ttyS0 ruser= rhost= user=historisation
+
+**Phase 1: Completed pre-decoding.
+        full event: 'Nov 17 22:14:34 historian login[47932]: pam_unix(login:auth): authentication failure; logname= uid=0 euid=0 tty=/dev/ttyS0 ruser= rhost= user=historisation'
+        timestamp: 'Nov 17 22:14:34'
+        hostname: 'historian'
+        program_name: 'login'
+
+**Phase 2: Completed decoding.
+        name: 'pam'
+        dstuser: 'historisation'
+        euid: '0'
+        tty: '/dev/ttyS0'
+        uid: '0'
+
+**Phase 3: Completed filtering (rules).
+        id: '100022'
+        level: '10'
+        description: 'Echec de connexion sur la console, hors SSH'
+        groups: '['local', 'custom', 'console', 'authentication_failed']'
+        firedtimes: '1'
+        mail: 'False'
+**Alert to be generated.
+
+Nov 17 22:15:01 historian login[47932]: pam_unix(login:session): session opened for user root(uid=0) by root(uid=0)
+
+**Phase 1: Completed pre-decoding.
+        full event: 'Nov 17 22:15:01 historian login[47932]: pam_unix(login:session): session opened for user root(uid=0) by root(uid=0)'
+        timestamp: 'Nov 17 22:15:01'
+        hostname: 'historian'
+        program_name: 'login'
+
+**Phase 2: Completed decoding.
+        name: 'pam'
+        parent: 'pam'
+        dstuser: 'root'
+        srcuser: 'root'
+        uid: '0'
+
+**Phase 3: Completed filtering (rules).
+        id: '100020'
+        level: '12'
+        description: 'Connexion root sur la console, hors SSH'
+        groups: '['local', 'custom', 'console', 'authentication_success']'
+        firedtimes: '1'
+        mail: 'True'
+**Alert to be generated.
+
+Nov 17 23:25:28 historian sshd-session[69148]: pam_unix(sshd:session): session opened for user presta(uid=1000) by presta(uid=0)
+
+**Phase 1: Completed pre-decoding.
+        full event: 'Nov 17 23:25:28 historian sshd-session[69148]: pam_unix(sshd:session): session opened for user presta(uid=1000) by presta(uid=0)'
+        timestamp: 'Nov 17 23:25:28'
+        hostname: 'historian'
+        program_name: 'sshd-session'
+
+**Phase 2: Completed decoding.
+        name: 'pam'
+        parent: 'pam'
+        dstuser: 'presta'
+        srcuser: 'presta'
+        uid: '0'
+
+**Phase 3: Completed filtering (rules).
+        id: '5501'
+        level: '3'
+        description: 'PAM: Login session opened.'
+        groups: '['pam', 'syslog', 'authentication_success']'
+        firedtimes: '1'
+        gdpr: '['IV_32.2']'
+        gpg13: '['7.8', '7.9']'
+        hipaa: '['164.312.b']'
+        mail: 'False'
+        mitre.id: '['T1078']'
+        mitre.tactic: '['Defense Evasion', 'Persistence', 'Privilege Escalation', 'Initial Access']'
+        mitre.technique: '['Valid Accounts']'
+        nist_800_53: '['AU.14', 'AC.7']'
+        pci_dss: '['10.2.5']'
+        tsc: '['CC6.8', 'CC7.2', 'CC7.3']'
+**Alert to be generated.
+
+Nov 17 23:25:30 historian sudo[69182]: pam_unix(sudo:session): session opened for user root(uid=0) by presta(uid=1000)
+
+**Phase 1: Completed pre-decoding.
+        full event: 'Nov 17 23:25:30 historian sudo[69182]: pam_unix(sudo:session): session opened for user root(uid=0) by presta(uid=1000)'
+        timestamp: 'Nov 17 23:25:30'
+        hostname: 'historian'
+        program_name: 'sudo'
+
+**Phase 2: Completed decoding.
+        name: 'pam'
+        parent: 'pam'
+        dstuser: 'root'
+        srcuser: 'presta'
+        uid: '1000'
+
+**Phase 3: Completed filtering (rules).
+        id: '5501'
+        level: '3'
+        description: 'PAM: Login session opened.'
+        groups: '['pam', 'syslog', 'authentication_success']'
+        firedtimes: '2'
+        gdpr: '['IV_32.2']'
+        gpg13: '['7.8', '7.9']'
+        hipaa: '['164.312.b']'
+        mail: 'False'
+        mitre.id: '['T1078']'
+        mitre.tactic: '['Defense Evasion', 'Persistence', 'Privilege Escalation', 'Initial Access']'
+        mitre.technique: '['Valid Accounts']'
+        nist_800_53: '['AU.14', 'AC.7']'
+        pci_dss: '['10.2.5']'
+        tsc: '['CC6.8', 'CC7.2', 'CC7.3']'
+**Alert to be generated.
+
+2026-11-18T11:30:00 consigne site=reservoir-colline reglage=chlore_mgL valeur=0.1 ancienne=0.41 compte=svc-hydrelec source=192.168.102.22
+
+**Phase 1: Completed pre-decoding.
+        full event: '2026-11-18T11:30:00 consigne site=reservoir-colline reglage=chlore_mgL valeur=0.1 ancienne=0.41 compte=svc-hydrelec source=192.168.102.22'
+
+**Phase 2: Completed decoding.
+        No decoder matched.
+
+**Phase 3: Completed filtering (rules).
+        id: '100012'
+        level: '12'
+        description: 'Consigne hors plage d'exploitation emise par le pupitre'
+        groups: '['local', 'custom', 'custom_app', 'config_change']'
+        firedtimes: '1'
+        mail: 'True'
+**Alert to be generated.
+
+2026-11-18T11:30:00 consigne site=reservoir-colline reglage=chlore_mgL valeur=0.55 ancienne=0.41 compte=svc-hydrelec source=192.168.102.22
+
+**Phase 1: Completed pre-decoding.
+        full event: '2026-11-18T11:30:00 consigne site=reservoir-colline reglage=chlore_mgL valeur=0.55 ancienne=0.41 compte=svc-hydrelec source=192.168.102.22'
+
+**Phase 2: Completed decoding.
+        No decoder matched.
+
+2026-11-18T11:30:00 consigne site=pompage-est reglage=seuil_bas_pct valeur=20.0 ancienne=15.0 compte=svc-hydrelec source=192.168.102.22
+
+**Phase 1: Completed pre-decoding.
+        full event: '2026-11-18T11:30:00 consigne site=pompage-est reglage=seuil_bas_pct valeur=20.0 ancienne=15.0 compte=svc-hydrelec source=192.168.102.22'
+
+**Phase 2: Completed decoding.
+        No decoder matched.
+
+2026-11-18T11:30:00 consigne site=pompage-est reglage=seuil_bas_pct valeur=30.0 ancienne=15.0 compte=svc-hydrelec source=192.168.102.22
+
+**Phase 1: Completed pre-decoding.
+        full event: '2026-11-18T11:30:00 consigne site=pompage-est reglage=seuil_bas_pct valeur=30.0 ancienne=15.0 compte=svc-hydrelec source=192.168.102.22'
+
+**Phase 2: Completed decoding.
+        No decoder matched.
+
+**Phase 3: Completed filtering (rules).
+        id: '100012'
+        level: '12'
+        description: 'Consigne hors plage d'exploitation emise par le pupitre'
+        groups: '['local', 'custom', 'custom_app', 'config_change']'
+        firedtimes: '2'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '1'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '2'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '3'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '4'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '5'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '6'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '7'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100023'
+        level: '12'
+        description: 'Balayage d'URL : plusieurs erreurs 4xx rapprochees depuis la meme source'
+        groups: '['local', 'custom', 'web', 'attack']'
+        firedtimes: '1'
+        frequency: '8'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '8'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '9'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '10'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '11'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '12'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '13'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100001'
+        level: '12'
+        description: 'Web access log: erreur 4xx détectée'
+        groups: '['local', 'custom', 'web', 'custom']'
+        firedtimes: '14'
+        mail: 'True'
+**Alert to be generated.
+
+192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"
+
+**Phase 1: Completed pre-decoding.
+        full event: '192.168.102.21 - svc-hydrelec [17/Nov/2026:22:15:31 +0100] "GET /admin HTTP/1.1" 404 207 "python-requests/2.32.3"'
+
+**Phase 2: Completed decoding.
+        name: 'web-accesslog'
+        id: '404'
+        protocol: 'GET'
+        srcip: '192.168.102.21'
+        url: '/admin'
+
+**Phase 3: Completed filtering (rules).
+        id: '100023'
+        level: '12'
+        description: 'Balayage d'URL : plusieurs erreurs 4xx rapprochees depuis la meme source'
+        groups: '['local', 'custom', 'web', 'attack']'
+        firedtimes: '2'
+        frequency: '8'
+        mail: 'True'
+**Alert to be generated.

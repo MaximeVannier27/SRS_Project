@@ -1,0 +1,38 @@
+Règle 100013 : preuve avec wazuh-logtest (Wazuh 4.14.9, serveur wazuh)
+Règle : « Historisation : collecte en échec sur une passerelle » (niveau 12). Elle alerte quand une collecte de l'historian ne reçoit pas un statut 200.
+Test fait le 17/11/2026. Les deux sorties ci-dessous sont recopiées depuis les sorties de wazuh-logtest obtenues sur le serveur wazuh
+(un caractère accentué, abîmé à l'affichage dans la sortie d'origine, a été rétabli dans la description : « échec »).
+
+======================================================================
+1) Test positif : collecte en échec (statut=500) -> la règle 100013 se déclenche
+======================================================================
+2026-11-17T00:50:00 collecte passerelle=hydrelec sites=3 statut=500
+
+**Phase 1: Completed pre-decoding.
+        full event: '2026-11-17T00:50:00 collecte passerelle=hydrelec sites=3 statut=500'
+
+**Phase 2: Completed decoding.
+        No decoder matched.
+
+**Phase 3: Completed filtering (rules).
+        id: '100013'
+        level: '12'
+        description: 'Historisation : collecte en échec sur une passerelle'
+        groups: '['local', 'custom', 'custom_app', 'collecte']'
+        firedtimes: '1'
+        mail: 'True'
+**Alert to be generated.
+
+======================================================================
+2) Test négatif : collecte normale (statut=200) -> aucune alerte (pas de Phase 3)
+======================================================================
+2026-11-13T00:50:00 collecte passerelle=hydrelec sites=3 statut=200
+
+**Phase 1: Completed pre-decoding.
+        full event: '2026-11-13T00:50:00 collecte passerelle=hydrelec sites=3 statut=200'
+
+**Phase 2: Completed decoding.
+        No decoder matched.
+
+Lecture : les journaux de collecte de l'historian n'ont pas de décodeur ; la règle s'appuie donc sur le texte de la ligne.
+Un statut différent de 200 déclenche l'alerte (niveau 12) ; un statut 200, le cas normal observé toutes les 5 minutes, ne déclenche rien.

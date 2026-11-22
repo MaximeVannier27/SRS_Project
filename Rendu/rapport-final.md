@@ -273,16 +273,16 @@ Tout cela devrait s'articuler autour d'une nouvelle architecture avec plusieurs 
     - Identification des flux réseaux et métiers et description des écarts constatés;
     - Affinage de la matrice de flux, notamment pour la partie NTP;
     - Rédaction, application, test et correction des iptables;
+    - Déploiement d'agents Wazuh et vérification de la remontée des journaux;
     - Analyse et rédaction post-mortem de l'incident n°1;
     - Rédaction de ces parties et de la prise de recul métier dans le rapport-final.
 
   - _Trung_:
-    - Déploiement des agents Wazuh sur les cinq machines et vérification de la remontée des journaux;
-    - Collecte des journaux métiers (blocs `localfile`) et choix des sources à superviser;
+    - Collecte des journaux métiers (blocs `localfile`);
+    - Déploiement d'agents Wazuh et vérification de la remontée des journaux;
     - Première rédaction de la matrice de flux à partir des flux observés (affinée ensuite avec Maxime);
     - Écriture, test (`wazuh-logtest`) et déploiement des règles de détection (100010 à 100013, puis 100012 et 100020 à 100023);
     - Analyse, remise en état du chlore et post-mortem de l'incident n°2;
-    - Préparation de la soutenance (supervision, règles, incident n°2);
     - Rédaction de la section 3 et du bloc de l'incident n°2 du rapport.
 
 - **Usage de l'IA** :
@@ -297,7 +297,7 @@ Tout cela devrait s'articuler autour d'une nouvelle architecture avec plusieurs 
     - aide à l'analyse des journaux extraits des machines (incidents 1 et 2);
     - propositions de brouillons (commandes, règles Wazuh, post-mortem de l'incident n°2, sections 3 et 4 de ce rapport), relus, corrigés et validés avant usage;
     - l'IA n'a eu aucun accès aux machines: chaque commande a été exécutée par nous, après lecture;
-    - **vérifications**: chaque règle écrite testée avec `wazuh-logtest` et vérifiée comme chargée dans le dashboard; alertes réelles observées pour 100001, 100010 et 100011 (incident 2) et 100012 (message de test); affirmations du rapport recoupées avec le dossier client et les journaux; choix des preuves et des captures présentées.
+    - vérifications: chaque règle écrite testée avec `wazuh-logtest` et vérifiée comme chargée dans le dashboard; alertes réelles observées pour 100001, 100010 et 100011 (incident 2) et 100012 (message de test); affirmations du rapport recoupées avec le dossier client et les journaux; choix des preuves et des captures présentées.
 
 ---
 

@@ -1,0 +1,47 @@
+# =============================================================
+# iptables : historian (192.168.102.21)
+# Source   : matrice-flux_v3.md
+# Genere le 13/11/2026
+# Test     : sudo iptables-restore --test < historian.rules
+# Appliquer: sudo iptables-apply -t 60 /etc/iptables/historian.rules
+# =============================================================
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT DROP [0:0]
+
+# --- Base : loopback, paquets invalides, connexions etablies ---
+-A INPUT -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+-A OUTPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+-A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# Flux 2 : administration depuis jump
+-A INPUT -p tcp -s 192.168.102.10 --dport 22 -j ACCEPT
+
+# Flux 8 : courbes depuis pupitre
+-A INPUT -p tcp -s 192.168.102.22 --dport 443 -j ACCEPT
+
+# Flux 6 : serveur horaire pour jump, scada-a, scada-b, pupitre, wazuh
+-A INPUT -p udp -s 192.168.102.10,192.168.102.20,192.168.102.22,192.168.102.24,192.168.102.30 --dport 123 -j ACCEPT
+
+# Flux 9 : collecte vers scada-a et scada-b
+-A OUTPUT -p tcp -d 192.168.102.20,192.168.102.24 --dport 443 -j ACCEPT
+
+# Flux 3 et 4 : journaux et enrolement vers wazuh
+-A OUTPUT -p tcp -d 192.168.102.30 --dport 1514 -j ACCEPT
+-A OUTPUT -p tcp -d 192.168.102.30 --dport 1515 -j ACCEPT
+
+# Flux 7 : NTP vers Internet (TEMPORAIRE : a restreindre aux IP des serveurs NTP)
+-A OUTPUT -p udp --dport 123 -m comment --comment "TEMP flux7 NTP Internet" -j ACCEPT
+
+# Flux 7 bis : DNS vers 9.9.9.9 et 1.1.1.1 (TEMPORAIRE : a supprimer apres passage des sources en IP)
+-A OUTPUT -p udp -d 9.9.9.9,1.1.1.1 --dport 53 -m comment --comment "TEMP flux7bis DNS" -j ACCEPT
+-A OUTPUT -p tcp -d 9.9.9.9,1.1.1.1 --dport 53 -m comment --comment "TEMP flux7bis DNS" -j ACCEPT
+
+# --- Journalisation des refus (avant la politique DROP) ---
+-A INPUT -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "IN-DROP: "
+-A OUTPUT -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "OUT-DROP: "
+COMMIT

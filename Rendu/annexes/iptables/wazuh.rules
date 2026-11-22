@@ -1,0 +1,45 @@
+# =============================================================
+# iptables : wazuh (192.168.102.30)
+# Source   : matrice-flux_v3.md
+# Genere le 13/11/2026
+# Test     : sudo iptables-restore --test < wazuh.rules
+# Appliquer: sudo iptables-apply -t 60 /etc/iptables/wazuh.rules
+# =============================================================
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT DROP [0:0]
+
+# --- Base : loopback, paquets invalides, connexions etablies ---
+-A INPUT -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+-A OUTPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+-A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# Flux 2 : administration depuis jump
+-A INPUT -p tcp -s 192.168.102.10 --dport 22 -j ACCEPT
+
+# Flux 3 et 4 : journaux (1514) et enrolement (1515) depuis les 5 agents
+-A INPUT -p tcp -s 192.168.102.10,192.168.102.20,192.168.102.21,192.168.102.22,192.168.102.24 --dport 1514 -j ACCEPT
+-A INPUT -p tcp -s 192.168.102.10,192.168.102.20,192.168.102.21,192.168.102.22,192.168.102.24 --dport 1515 -j ACCEPT
+
+# Flux 5 : dashboard (expose en 4402). Ouvert a toutes les sources, acces protege par authentification.
+# La source reelle n'est pas la passerelle .1 : les journaux IN-DROP montrent l'IP publique de l'utilisateur,
+# qui varie selon le reseau (eduroam, domicile). Une restriction a une IP fixe bloquait le groupe.
+-A INPUT -p tcp --dport 443 -j ACCEPT
+
+# API (55000) : localhost seulement, couvert par la regle loopback, aucune regle necessaire
+
+# Flux 6 : synchronisation horaire sur historian
+-A OUTPUT -p udp -d 192.168.102.21 --dport 123 -j ACCEPT
+
+# --- DHCP : decommenter SEULEMENT si eth0 est en DHCP (ip -4 a show eth0 : "dynamic") ---
+# -A INPUT -p udp --sport 67 --dport 68 -j ACCEPT
+# -A OUTPUT -p udp --sport 68 --dport 67 -j ACCEPT
+
+# --- Journalisation des refus (avant la politique DROP) ---
+-A INPUT -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "IN-DROP: "
+-A OUTPUT -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "OUT-DROP: "
+COMMIT
